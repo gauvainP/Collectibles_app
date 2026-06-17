@@ -293,6 +293,10 @@ function reducer(state, action) {
       };
     }
 
+    case 'MEMORY_REWARD': {
+      return { ...state, coins: state.coins + 100 };
+    }
+
     case 'SELL_ITEM': {
       const { itemType, filter } = action.payload;
       const idx = state.inventory.findIndex(i => {
@@ -361,6 +365,7 @@ export function GameProvider({ children }) {
   const clearEnvironment = useCallback((envId) => dispatch({ type: 'CLEAR_ENVIRONMENT', payload: envId }), []);
   const claimZooMoney = useCallback(() => dispatch({ type: 'CLAIM_ZOO_MONEY' }), []);
   const sellItem = useCallback((itemType, filter) => dispatch({ type: 'SELL_ITEM', payload: { itemType, filter } }), []);
+  const claimMemoryReward = useCallback(() => dispatch({ type: 'MEMORY_REWARD' }), []);
 
   const visitors = calculateVisitors(state.zoo.environments);
   const canClaimZooMoney = state.lastClaimDate !== today();
@@ -385,7 +390,7 @@ export function GameProvider({ children }) {
       visitors, canClaimZooMoney, envCount, maxEnvironments: MAX_ENVIRONMENTS,
       totalVisitors: state.totalVisitors || 0, lastVisitors: state.lastVisitors || 0,
       claimPack, buyPack, buyGigaPack, buyFoodPack, buyToyPack, buyAnimalPack, revealCard, revealAll, closePack,
-      placeEnvironment, placeAnimal, equipItem, clearEnvironment, claimZooMoney, sellItem,
+      placeEnvironment, placeAnimal, equipItem, clearEnvironment, claimZooMoney, sellItem, claimMemoryReward,
     }}>
       {children}
     </GameContext.Provider>

@@ -16,6 +16,7 @@ export default function Navbar() {
           <NavLink to="/shop" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Shop</NavLink>
           <NavLink to="/zoo" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>My Zoo</NavLink>
           <NavLink to="/collection" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Collection</NavLink>
+          <NavLink to="/play" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Play</NavLink>
         </div>
         <div className="nav-stats">
           <span>📦 {owned}/{total}</span>

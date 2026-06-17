@@ -1403,6 +1403,117 @@
   100% { background-position: -200% 0; }
 }
 
+/* Memory Game */
+.memory-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.memory-card:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: var(--bg-card-hover);
+}
+
+.memory-card.flipped,
+.memory-card.matched {
+  border-color: rgba(16,185,129,0.4);
+  background: rgba(16,185,129,0.08);
+  cursor: default;
+}
+
+.memory-card.matched {
+  opacity: 0.6;
+  border-color: var(--green);
+}
+
+.memory-card:disabled {
+  cursor: default;
+}
+
+.memory-card-back,
+.memory-card-front {
+  position: absolute;
+  backface-visibility: hidden;
+  transition: transform 0.4s;
+}
+
+.memory-card-back {
+  font-size: 28px;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.memory-card.flipped .memory-card-back,
+.memory-card.matched .memory-card-back {
+  display: none;
+}
+
+.memory-card .memory-card-front {
+  display: none;
+}
+
+.memory-card.flipped .memory-card-front,
+.memory-card.matched .memory-card-front {
+  display: block;
+}
+
+.memory-result {
+  text-align: center;
+  padding: 32px;
+  margin-bottom: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.memory-result-emoji {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+.memory-result h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.memory-result p {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .home-hero h1 { font-size: 32px; }
