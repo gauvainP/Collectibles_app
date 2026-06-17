@@ -7,31 +7,31 @@ const RARITIES = {
 };
 
 const ANIMALS = [
-  { id: 'lion', name: 'Lion', emoji: '🦁', rarity: 'rare' },
-  { id: 'tiger', name: 'Tiger', emoji: '🐯', rarity: 'epic' },
-  { id: 'elephant', name: 'Elephant', emoji: '🐘', rarity: 'uncommon' },
-  { id: 'giraffe', name: 'Giraffe', emoji: '🦒', rarity: 'uncommon' },
-  { id: 'monkey', name: 'Monkey', emoji: '🐵', rarity: 'common' },
-  { id: 'panda', name: 'Panda', emoji: '🐼', rarity: 'epic' },
-  { id: 'fox', name: 'Fox', emoji: '🦊', rarity: 'rare' },
-  { id: 'wolf', name: 'Wolf', emoji: '🐺', rarity: 'rare' },
-  { id: 'eagle', name: 'Eagle', emoji: '🦅', rarity: 'epic' },
-  { id: 'shark', name: 'Shark', emoji: '🦈', rarity: 'legendary' },
-  { id: 'dolphin', name: 'Dolphin', emoji: '🐬', rarity: 'rare' },
-  { id: 'butterfly', name: 'Butterfly', emoji: '🦋', rarity: 'common' },
-  { id: 'turtle', name: 'Turtle', emoji: '🐢', rarity: 'uncommon' },
-  { id: 'peacock', name: 'Peacock', emoji: '🦚', rarity: 'rare' },
-  { id: 'owl', name: 'Owl', emoji: '🦉', rarity: 'uncommon' },
-  { id: 'dragon', name: 'Dragon', emoji: '🐉', rarity: 'legendary' },
-  { id: 'phoenix', name: 'Phoenix', emoji: '🦩', rarity: 'legendary' },
-  { id: 'rabbit', name: 'Rabbit', emoji: '🐇', rarity: 'common' },
-  { id: 'bear', name: 'Bear', emoji: '🐻', rarity: 'uncommon' },
-  { id: 'penguin', name: 'Penguin', emoji: '🐧', rarity: 'common' },
-  { id: 'dog', name: 'Dog', emoji: '🐕', rarity: 'common' },
-  { id: 'cat', name: 'Cat', emoji: '🐈', rarity: 'common' },
-  { id: 'horse', name: 'Horse', emoji: '🐴', rarity: 'uncommon' },
-  { id: 'sheep', name: 'Sheep', emoji: '🐑', rarity: 'common' },
-  { id: 'parrot', name: 'Parrot', emoji: '🦜', rarity: 'uncommon' },
+  { id: 'lion', name: 'Lion', emoji: '🦁', rarity: 'rare', lifespan: 15 },
+  { id: 'tiger', name: 'Tiger', emoji: '🐯', rarity: 'epic', lifespan: 15 },
+  { id: 'elephant', name: 'Elephant', emoji: '🐘', rarity: 'uncommon', lifespan: 60 },
+  { id: 'giraffe', name: 'Giraffe', emoji: '🦒', rarity: 'uncommon', lifespan: 25 },
+  { id: 'monkey', name: 'Monkey', emoji: '🐵', rarity: 'common', lifespan: 20 },
+  { id: 'panda', name: 'Panda', emoji: '🐼', rarity: 'epic', lifespan: 20 },
+  { id: 'fox', name: 'Fox', emoji: '🦊', rarity: 'rare', lifespan: 5 },
+  { id: 'wolf', name: 'Wolf', emoji: '🐺', rarity: 'rare', lifespan: 10 },
+  { id: 'eagle', name: 'Eagle', emoji: '🦅', rarity: 'epic', lifespan: 20 },
+  { id: 'shark', name: 'Shark', emoji: '🦈', rarity: 'legendary', lifespan: 25 },
+  { id: 'dolphin', name: 'Dolphin', emoji: '🐬', rarity: 'rare', lifespan: 30 },
+  { id: 'butterfly', name: 'Butterfly', emoji: '🦋', rarity: 'common', lifespan: 1 },
+  { id: 'turtle', name: 'Turtle', emoji: '🐢', rarity: 'uncommon', lifespan: 80 },
+  { id: 'peacock', name: 'Peacock', emoji: '🦚', rarity: 'rare', lifespan: 15 },
+  { id: 'owl', name: 'Owl', emoji: '🦉', rarity: 'uncommon', lifespan: 15 },
+  { id: 'dragon', name: 'Dragon', emoji: '🐉', rarity: 'legendary', lifespan: 1000 },
+  { id: 'phoenix', name: 'Phoenix', emoji: '🦩', rarity: 'legendary', lifespan: 500 },
+  { id: 'rabbit', name: 'Rabbit', emoji: '🐇', rarity: 'common', lifespan: 8 },
+  { id: 'bear', name: 'Bear', emoji: '🐻', rarity: 'uncommon', lifespan: 25 },
+  { id: 'penguin', name: 'Penguin', emoji: '🐧', rarity: 'common', lifespan: 15 },
+  { id: 'dog', name: 'Dog', emoji: '🐕', rarity: 'common', lifespan: 13 },
+  { id: 'cat', name: 'Cat', emoji: '🐈', rarity: 'common', lifespan: 15 },
+  { id: 'horse', name: 'Horse', emoji: '🐴', rarity: 'uncommon', lifespan: 25 },
+  { id: 'sheep', name: 'Sheep', emoji: '🐑', rarity: 'common', lifespan: 12 },
+  { id: 'parrot', name: 'Parrot', emoji: '🦜', rarity: 'uncommon', lifespan: 50 },
 ];
 
 const ENVIRONMENTS = [
@@ -263,6 +263,10 @@ function generateAnimalPack() {
   return [{ slot: 0, type: 'animal', cardId: animal.id, name: animal.name, emoji: animal.emoji, rarity: animal.rarity, uid: uid() }];
 }
 
+function randomSex() {
+  return Math.random() < 0.5 ? 'male' : 'female';
+}
+
 function getCompatibleEnvironments(animalId) {
   return Object.entries(COMPATIBILITY)
     .filter(([, animals]) => animals.includes(animalId))
@@ -274,5 +278,5 @@ function getAnimalById(id) { return ANIMALS.find(a => a.id === id); }
 export {
   RARITIES, ANIMALS, ENVIRONMENTS, FOOD_TYPES, ENV_DECORATIONS, TOY_NAMES,
   COMPATIBILITY, ITEM_WEIGHTS, generatePack, generateGigaPack, generateFoodPack, generateToyPack, generateAnimalPack,
-  getCompatibleEnvironments, getAnimalById, uid,
+  getCompatibleEnvironments, getAnimalById, uid, randomSex,
 };

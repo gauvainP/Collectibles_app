@@ -1514,6 +1514,240 @@
   font-size: 15px;
 }
 
+/* Sex / Age on cards */
+.card-sex-age {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Animal sex in zoo & detail modal */
+.animal-sex {
+  font-size: 18px;
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
+.animal-sex-icon {
+  font-size: 14px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.animal-age-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.age-sep {
+  opacity: 0.4;
+}
+
+.remaining-years {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-left: auto;
+}
+
+.env-animal-age {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Life bar */
+.life-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.life-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #3B82F6, #F59E0B, #EF4444);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* Egg in zoo */
+.env-egg-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.env-egg-state .egg-hint {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* Animal instances in collection modal */
+.animal-instances {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.animal-instance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+
+.instance-age, .instance-lifespan {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Breed page */
+.breed-section {
+  margin-top: 24px;
+}
+
+.breed-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.breed-pairs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.breed-pair-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pair-species-header {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pair-animals {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pair-animal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  flex: 1;
+}
+
+.pair-animal.male {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.pair-animal.female {
+  background: rgba(236, 72, 153, 0.1);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.pair-sex {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.pair-animal.male .pair-sex { color: #3B82F6; }
+.pair-animal.female .pair-sex { color: #EC4899; }
+
+.pair-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pair-age {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pair-heart {
+  font-size: 20px;
+  opacity: 0.5;
+}
+
+.pair-warning {
+  font-size: 12px;
+  color: var(--orange);
+  text-align: center;
+  opacity: 0.8;
+}
+
+.breed-btn {
+  margin-top: auto;
+}
+
+.breed-eggs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.egg-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.egg-emoji {
+  font-size: 32px;
+}
+
+.egg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.egg-species {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.egg-timer {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .home-hero h1 { font-size: 32px; }

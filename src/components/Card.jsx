@@ -58,6 +58,12 @@ export default function Card({ item, revealed, isNew, onClick }) {
           {stars > 0 && <div className="card-stars" style={{ color }}>{'★'.repeat(stars)}</div>}
           {rarityLabel && <div className="card-rarity" style={{ color }}>{rarityLabel}</div>}
           {item.type === 'coins' && <div className="card-rarity" style={{ color }}>+{item.amount}</div>}
+          {item.type === 'animal' && item.sex && (
+            <div className="card-sex-age">
+              <span>{item.sex === 'male' ? '♂' : '♀'}</span>
+              <span> {item.age}y / {item.lifespan}y</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -56,7 +56,8 @@ export default function Collection() {
 
 function AnimalsTab({ collection, inventory, sellItem, zoo }) {
   const everOwnedSet = new Set(collection);
-  const inventoryAnimalIds = new Set(inventory.filter(i => i.type === 'animal').map(i => i.cardId));
+  const inventoryAnimals = inventory.filter(i => i.type === 'animal');
+  const inventoryAnimalIds = new Set(inventoryAnimals.map(i => i.cardId));
   const zooAnimalIds = new Set(zoo.environments.filter(e => e.animal).map(e => e.animal.cardId));
   const currentlyOwned = new Set([...inventoryAnimalIds, ...zooAnimalIds]);
 
@@ -128,6 +129,7 @@ function AnimalsTab({ collection, inventory, sellItem, zoo }) {
           animal={selected}
           owned={currentlyOwned.has(selected.id)}
           everOwned={everOwnedSet.has(selected.id)}
+          animals={inventoryAnimals.filter(i => i.cardId === selected.id)}
           onClose={() => setSelected(null)}
         />
       )}
@@ -135,7 +137,7 @@ function AnimalsTab({ collection, inventory, sellItem, zoo }) {
   );
 }
 
-function AnimalInfoModal({ animal, owned, everOwned, onClose }) {
+function AnimalInfoModal({ animal, owned, everOwned, animals, onClose }) {
   const rarity = RARITIES[animal.rarity];
   const compatEnvs = getCompatibleEnvironments(animal.id);
   const toy = TOY_NAMES[animal.id];
@@ -220,6 +222,24 @@ function AnimalInfoModal({ animal, owned, everOwned, onClose }) {
             <span>✨ Decoration</span>
           </div>
         </div>
+
+        {animals && animals.length > 0 && (
+          <div className="info-section">
+            <div className="info-label">Your {animal.name}s</div>
+            <div className="animal-instances">
+              {animals.map(inst => (
+                <div key={inst.uid} className="animal-instance">
+                  <span>{inst.sex === 'male' ? '♂' : '♀'}</span>
+                  <span className="instance-age">Age: {inst.age}y</span>
+                  <span className="instance-lifespan">Lifespan: {inst.lifespan}y</span>
+                  <div className="life-bar">
+                    <div className="life-fill" style={{ width: `${Math.min(100, (inst.age / inst.lifespan) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

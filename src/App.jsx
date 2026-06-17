@@ -6,6 +6,7 @@ import Shop from './pages/Shop';
 import Collection from './pages/Collection';
 import MyZoo from './pages/MyZoo';
 import Play from './pages/Play';
+import Breed from './pages/Breed';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/collection" element={<Collection />} />
             <Route path="/zoo" element={<MyZoo />} />
             <Route path="/play" element={<Play />} />
+            <Route path="/breed" element={<Breed />} />
           </Routes>
         </div>
       </GameProvider>

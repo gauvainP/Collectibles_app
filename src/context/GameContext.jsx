@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { generatePack, generateGigaPack, generateFoodPack, generateToyPack, generateAnimalPack, uid as genUid, getAnimalById, RARITIES } from '../data/cards';
+import { generatePack, generateGigaPack, generateFoodPack, generateToyPack, generateAnimalPack, uid as genUid, getAnimalById, RARITIES, randomSex } from '../data/cards';
 
 const GameContext = createContext(null);
 const STORAGE_KEY = 'collectibles_game';
@@ -38,7 +38,7 @@ function defaultState() {
     revealedIds: [],
     coins: STARTING_COINS,
     inventory: [],
-    zoo: { lastDailyDate: null, environments: [] },
+    zoo: { lastDailyDate: null, environments: [], eggs: [] },
     lastClaimDate: null,
     totalVisitors: 0,
     lastVisitors: 0,
@@ -64,7 +64,21 @@ function processDailyTick(state) {
   const last = state.zoo.lastDailyDate;
   if (last === today()) return state;
 
+  const hatchedAnimals = [];
+
   const envs = state.zoo.environments.map(env => {
+    if (env.egg && env.egg.createdDate !== today()) {
+      const animalDef = getAnimalById(env.egg.cardId);
+      const lifespan = animalDef?.lifespan || 10;
+      const sex = randomSex();
+      const hatched = {
+        cardId: env.egg.cardId, sex, age: 1, lifespan,
+        alive: true, food: null, drink: null, toy: null, decoration: null,
+        daysWithoutFood: 0, daysWithoutDrink: 0, daysWithToy: 0, daysWithDecoration: 0,
+      };
+      hatchedAnimals.push({ uid: genUid(), type: 'animal', cardId: env.egg.cardId, sex, age: 1, lifespan });
+      return { ...env, egg: null, animal: hatched };
+    }
     if (!env.animal || !env.animal.alive) return env;
     const a = { ...env.animal };
     const hadFood = a.food !== null;
@@ -72,8 +86,8 @@ function processDailyTick(state) {
 
     a.food = null;
     a.drink = null;
-    a.daysWithoutFood = hadFood ? 0 : a.daysWithoutFood + 1;
-    a.daysWithoutDrink = hadDrink ? 0 : a.daysWithoutDrink + 1;
+    a.daysWithoutFood = hadFood ? 0 : (a.daysWithoutFood || 0) + 1;
+    a.daysWithoutDrink = hadDrink ? 0 : (a.daysWithoutDrink || 0) + 1;
 
     a.daysWithToy = a.toy ? (a.daysWithToy || 0) + 1 : 0;
     a.daysWithDecoration = a.decoration ? (a.daysWithDecoration || 0) + 1 : 0;
@@ -85,12 +99,29 @@ function processDailyTick(state) {
       a.alive = false;
     }
 
+    a.age = (a.age || 0) + 1;
+    if (a.age >= (a.lifespan || 10)) {
+      a.alive = false;
+    }
+
     return { ...env, animal: a };
+  });
+
+  const eggs = (state.zoo.eggs || []).filter(egg => {
+    if (egg.createdDate !== today()) {
+      const animalDef = getAnimalById(egg.cardId);
+      const lifespan = animalDef?.lifespan || 10;
+      const sex = randomSex();
+      hatchedAnimals.push({ uid: genUid(), type: 'animal', cardId: egg.cardId, sex, age: 1, lifespan });
+      return false;
+    }
+    return true;
   });
 
   return {
     ...state,
-    zoo: { ...state.zoo, lastDailyDate: today(), environments: envs },
+    zoo: { ...state.zoo, lastDailyDate: today(), environments: envs, eggs },
+    inventory: hatchedAnimals.length > 0 ? [...state.inventory, ...hatchedAnimals] : state.inventory,
   };
 }
 
@@ -119,7 +150,11 @@ function reducer(state, action) {
         if (!collection.includes(card.cardId)) {
           collection = [...collection, card.cardId];
         }
-        inventory = [...inventory, { uid: genUid(), type: 'animal', cardId: card.cardId }];
+        const animalDef = getAnimalById(card.cardId);
+        const lifespan = animalDef?.lifespan || 10;
+        const age = Math.floor(Math.random() * lifespan);
+        const sex = randomSex();
+        inventory = [...inventory, { uid: genUid(), type: 'animal', cardId: card.cardId, sex, age, lifespan }];
       } else if (card.type === 'environment') {
         inventory = [...inventory, { uid: genUid(), type: 'environment', envType: card.envType }];
       } else if (card.type === 'food') {
@@ -146,7 +181,7 @@ function reducer(state, action) {
 
       const envType = state.inventory[idx].envType;
       const inventory = state.inventory.filter((_, i) => i !== idx);
-      const env = { id: genUid(), envType, decoration: null, animal: null };
+      const env = { id: genUid(), envType, decoration: null, animal: null, egg: null };
 
       return { ...state, inventory, zoo: { ...state.zoo, environments: [...state.zoo.environments, env] } };
     }
@@ -158,7 +193,7 @@ function reducer(state, action) {
 
       const envIdx = state.zoo.environments.findIndex(e => e.id === envId);
       if (envIdx === -1) return state;
-      if (state.zoo.environments[envIdx].animal) return state;
+      if (state.zoo.environments[envIdx].animal || state.zoo.environments[envIdx].egg) return state;
 
       const animal = state.inventory[invIdx];
       const animalDef = getAnimalById(animal.cardId);
@@ -177,7 +212,7 @@ function reducer(state, action) {
       const inventory = state.inventory.filter((_, i) => i !== invIdx);
       const environments = state.zoo.environments.map((e, i) =>
         i === envIdx
-          ? { ...e, animal: { cardId: animal.cardId, alive: true, food: null, drink: null, toy: null, decoration: null, daysWithoutFood: 0, daysWithoutDrink: 0, daysWithToy: 0, daysWithDecoration: 0 } }
+          ? { ...e, animal: { cardId: animal.cardId, sex: animal.sex, age: animal.age, lifespan: animal.lifespan, alive: true, food: null, drink: null, toy: null, decoration: null, daysWithoutFood: 0, daysWithoutDrink: 0, daysWithToy: 0, daysWithDecoration: 0 }, egg: null }
           : e
       );
 
@@ -264,7 +299,11 @@ function reducer(state, action) {
           if (!collection.includes(card.cardId)) {
             collection = [...collection, card.cardId];
           }
-          inventory = [...inventory, { uid: genUid(), type: 'animal', cardId: card.cardId }];
+          const animalDef = getAnimalById(card.cardId);
+          const lifespan = animalDef?.lifespan || 10;
+          const age = Math.floor(Math.random() * lifespan);
+          const sex = randomSex();
+          inventory = [...inventory, { uid: genUid(), type: 'animal', cardId: card.cardId, sex, age, lifespan }];
         } else if (card.type === 'environment') {
           inventory = [...inventory, { uid: genUid(), type: 'environment', envType: card.envType }];
         } else if (card.type === 'food') {
@@ -323,6 +362,24 @@ function reducer(state, action) {
       return { ...state, zoo: { ...state.zoo, environments } };
     }
 
+    case 'BREED_PAIR': {
+      const { maleEnvId, femaleEnvId } = action.payload;
+      const maleEnv = state.zoo.environments.find(e => e.id === maleEnvId);
+      const femaleEnv = state.zoo.environments.find(e => e.id === femaleEnvId);
+      if (!maleEnv?.animal?.alive || !femaleEnv?.animal?.alive) return state;
+      if (maleEnv.animal.cardId !== femaleEnv.animal.cardId) return state;
+      if (maleEnv.animal.sex !== 'male' || femaleEnv.animal.sex !== 'female') return state;
+
+      const cardId = maleEnv.animal.cardId;
+      const environments = state.zoo.environments.map(e => {
+        if (e.id === maleEnvId) return { ...e, animal: null, egg: { cardId, createdDate: today() } };
+        if (e.id === femaleEnvId) return { ...e, animal: null, egg: null };
+        return e;
+      });
+
+      return { ...state, zoo: { ...state.zoo, environments } };
+    }
+
     case 'TICK': {
       return processDailyTick(state);
     }
@@ -366,6 +423,7 @@ export function GameProvider({ children }) {
   const claimZooMoney = useCallback(() => dispatch({ type: 'CLAIM_ZOO_MONEY' }), []);
   const sellItem = useCallback((itemType, filter) => dispatch({ type: 'SELL_ITEM', payload: { itemType, filter } }), []);
   const claimMemoryReward = useCallback(() => dispatch({ type: 'MEMORY_REWARD' }), []);
+  const breedPair = useCallback((maleEnvId, femaleEnvId) => dispatch({ type: 'BREED_PAIR', payload: { maleEnvId, femaleEnvId } }), []);
 
   const visitors = calculateVisitors(state.zoo.environments);
   const canClaimZooMoney = state.lastClaimDate !== today();
@@ -390,7 +448,7 @@ export function GameProvider({ children }) {
       visitors, canClaimZooMoney, envCount, maxEnvironments: MAX_ENVIRONMENTS,
       totalVisitors: state.totalVisitors || 0, lastVisitors: state.lastVisitors || 0,
       claimPack, buyPack, buyGigaPack, buyFoodPack, buyToyPack, buyAnimalPack, revealCard, revealAll, closePack,
-      placeEnvironment, placeAnimal, equipItem, clearEnvironment, claimZooMoney, sellItem, claimMemoryReward,
+      placeEnvironment, placeAnimal, equipItem, clearEnvironment, claimZooMoney, sellItem, claimMemoryReward, breedPair,
     }}>
       {children}
     </GameContext.Provider>
@@ -402,3 +460,6 @@ export function useGame() {
   if (!ctx) throw new Error('useGame must be used within GameProvider');
   return ctx;
 }
+
+
+

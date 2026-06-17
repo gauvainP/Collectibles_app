@@ -31,8 +31,22 @@ function AnimalDetail({ env, onClose, inventory, onEquip, onRemove }) {
 
         <div className="animal-detail-header">
           <span className="animal-detail-emoji">{animalDef.emoji}</span>
-          <h2>{animalDef.name}</h2>
+          <h2>
+            {animalDef.name}
+            <span className="animal-sex">{animal.sex === 'male' ? '♂' : '♀'}</span>
+          </h2>
           {!animal.alive && <span className="death-badge">💀 Deceased</span>}
+        </div>
+        <div className="animal-age-info">
+          <span>Age: {animal.age ?? 0}y</span>
+          <span className="age-sep">/</span>
+          <span>Lifespan: {animal.lifespan ?? 10}y</span>
+          <div className="life-bar">
+            <div className="life-fill" style={{ width: `${Math.min(100, ((animal.age ?? 0) / (animal.lifespan || 10)) * 100)}%` }} />
+          </div>
+          <span className="remaining-years">
+            {(animal.lifespan || 10) - (animal.age ?? 0)}y remaining
+          </span>
         </div>
 
         {animal.alive && (
@@ -81,7 +95,9 @@ function AnimalDetail({ env, onClose, inventory, onEquip, onRemove }) {
         {!animal.alive && (
           <>
             <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 12 }}>
-              This animal passed away from starvation.
+              {animal.age >= (animal.lifespan || 10)
+                ? `This animal passed away from old age at ${animal.age} years.`
+                : 'This animal passed away from starvation.'}
             </p>
             <button
               className="claim-btn"
@@ -136,7 +152,7 @@ function PlaceEnvironmentModal({ inventory, onPlace, onClose }) {
 
 function PlaceAnimalModal({ environments, inventory, onPlace, onClose }) {
   const animals = inventory.filter(i => i.type === 'animal');
-  const emptyEnvs = environments.filter(e => !e.animal);
+  const emptyEnvs = environments.filter(e => !e.animal && !e.egg);
 
   const [selectedEnv, setSelectedEnv] = useState(null);
   const [selectedAnimal, setSelectedAnimal] = useState(null);
@@ -190,6 +206,9 @@ function PlaceAnimalModal({ environments, inventory, onPlace, onClose }) {
                   <button key={item.uid} className="inv-item" onClick={() => setSelectedAnimal(item)}>
                     <span style={{ fontSize: 32 }}>{def?.emoji || '❓'}</span>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{def?.name || item.cardId}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {item.sex === 'male' ? '♂' : '♀'} {item.age ?? '?'}y
+                    </span>
                   </button>
                 );
               })}
@@ -249,7 +268,7 @@ export default function MyZoo() {
   };
 
   const envs = zoo.environments || [];
-  const hasEmptySlot = envs.some(e => !e.animal);
+  const hasEmptySlot = envs.some(e => !e.animal && !e.egg);
   const hasCompatibleAnimal = inventory.some(i => {
     if (i.type !== 'animal') return false;
     const compat = getCompatibleEnvironments(i.cardId);
@@ -343,7 +362,15 @@ export default function MyZoo() {
                     <div className="env-decoration">✨ Decoration placed</div>
                   )}
 
-                  {!env.animal && (
+                  {env.egg && (
+                    <div className="env-egg-state">
+                      <span>🥚</span>
+                      <span>Incubating egg...</span>
+                      <span className="egg-hint">Hatches next day</span>
+                    </div>
+                  )}
+
+                  {!env.animal && !env.egg && (
                     <div className="env-empty-state">
                       <span>🟢</span>
                       <span>Ready for an animal</span>
@@ -358,6 +385,12 @@ export default function MyZoo() {
                       </div>
                       <div className="env-animal-name">
                         {getAnimalById(env.animal.cardId)?.name || env.animal.cardId}
+                        <span className="animal-sex-icon">
+                          {env.animal.sex === 'male' ? '♂' : env.animal.sex === 'female' ? '♀' : ''}
+                        </span>
+                      </div>
+                      <div className="env-animal-age">
+                        {env.animal.age ?? 0}y / {env.animal.lifespan ?? 10}y
                       </div>
                       {!isDead && (
                         <>
@@ -384,7 +417,7 @@ export default function MyZoo() {
                     </div>
                   )}
 
-                  {env.animal && (
+                  {(env.animal || env.egg) && (
                     <button className="remove-btn" onClick={() => clearEnvironment(env.id)}>
                       🗑️ Remove & Free Slot
                     </button>
