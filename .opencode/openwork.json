@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "Collectibles_app",
+    "createdAt": 1781684871771,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "/Users/Gauvain.Pataky1@ibm.com/Documents/testCodage/Doodle_jump/Collectibles_app"
+  ],
+  "reload": null
+}
