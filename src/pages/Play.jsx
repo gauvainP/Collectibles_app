@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { ANIMALS } from '../data/cards';
+import { ANIMALS, DIET_MAP, getAnimalById } from '../data/cards';
 
 const TABS = [
   { id: 'memory', label: 'Memory', emoji: '🧠' },
   { id: 'mines', label: 'Mines', emoji: '💣' },
   { id: 'slots', label: 'Slots', emoji: '🎰' },
   { id: 'agejack', label: 'Age Jack', emoji: '🃏' },
+  { id: 'vegan', label: 'Vegan or Not', emoji: '🥦' },
 ];
 
 // --- Memory Game ---
@@ -259,10 +260,13 @@ function MinesGame({ coins, onEntry, onReward }) {
       <div className="mines-menu">
         <div className="mines-menu-icon">💣</div>
         <h2>Mines</h2>
-        <p>Pay 100 coins. Reveal cards one at a time.</p>
+        <p>Pay 100 coins to reveal cards from a 3×3 grid.</p>
         <p>🦋 Butterfly = +10 coins &nbsp; 🐘 Elephant = +100 coins</p>
         <p>💣 Hit the mine = lose everything!</p>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>Cash out anytime to keep your winnings.</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
+          Reveal one card at a time. Cash out anytime to keep your winnings. 
+          <br />8 safe cards, 1 mine. The more you reveal, the higher the risk!
+        </p>
         <button
           className="claim-btn"
           onClick={startGame}
@@ -688,6 +692,130 @@ function AgeJackGame({ coins, onEntry, onReward }) {
   );
 }
 
+// --- Vegan or Not ---
+
+const VEGAN_MEAT_EATERS = ['lion', 'fox', 'wolf', 'tiger', 'eagle', 'shark', 'dolphin', 'owl', 'phoenix', 'penguin'];
+const VEGAN_VEGAN = ['elephant', 'giraffe', 'monkey', 'panda', 'butterfly', 'turtle', 'rabbit', 'bear', 'horse', 'sheep', 'parrot', 'peacock'];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function VeganOrNotGame({ coins, onEntry, onReward }) {
+  const [phase, setPhase] = useState('menu');
+  const [bet, setBet] = useState(100);
+  const [card, setCard] = useState(null);
+  const [result, setResult] = useState(null);
+  const [payout, setPayout] = useState(0);
+  const rewardPaid = useRef(false);
+
+  useEffect(() => {
+    if (result && payout > 0 && !rewardPaid.current) {
+      rewardPaid.current = true;
+      onReward(payout);
+    }
+    if (!result) rewardPaid.current = false;
+  }, [result, payout, onReward]);
+
+  const drawCard = () => {
+    const isDragon = Math.random() < 0.01;
+    if (isDragon) return { id: 'dragon', name: 'Dragon', emoji: '🐉', eatsMeat: true };
+    const isMeat = Math.random() < 0.5;
+    const pool = isMeat ? VEGAN_MEAT_EATERS : VEGAN_VEGAN;
+    const animalId = pick(pool);
+    const def = getAnimalById(animalId);
+    return { id: animalId, name: def.name, emoji: def.emoji, eatsMeat: isMeat };
+  };
+
+  const startGame = (selectedBet) => {
+    if (coins < selectedBet) return;
+    onEntry(selectedBet);
+    setBet(selectedBet);
+    setCard(drawCard());
+    setResult(null);
+    setPayout(0);
+    setPhase('playing');
+  };
+
+  const guess = (saysMeat) => {
+    if (!card || result) return;
+    if (card.id === 'dragon') {
+      setResult('dragon');
+      setPayout(bet * 10);
+    } else if (card.eatsMeat === saysMeat) {
+      setResult('win');
+      setPayout(Math.floor(bet * 1.75));
+    } else {
+      setResult('lose');
+      setPayout(0);
+    }
+  };
+
+  const BETS = [100, 300];
+
+  if (phase === 'menu') {
+    return (
+      <div className="mines-menu">
+        <div className="mines-menu-icon">🥦</div>
+        <h2>Vegan or Not</h2>
+        <p>A card is drawn face down. Guess if it eats meat or not!</p>
+        <p>🥩 2 meat-eaters &nbsp; 🌿 2 herbivores in the deck</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
+          Correct guess: 1.75× your bet &nbsp; | &nbsp; 🐉 1% Dragon: 10× Jackpot!
+        </p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+          {BETS.map(b => (
+            <button
+              key={b}
+              className="claim-btn"
+              onClick={() => startGame(b)}
+              disabled={coins < b}
+              style={{ opacity: coins < b ? 0.4 : 1 }}
+            >
+              {coins >= b ? `Play — ${b}🪙` : 'Not Enough Coins'}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="vegan-container" style={{ textAlign: 'center' }}>
+      {!result && (
+        <>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>What does this animal eat?</p>
+          <div className="aj-card" style={{ margin: '0 auto', width: 100, minHeight: 100, justifyContent: 'center' }}>
+            <span style={{ fontSize: 32 }}>🃏</span>
+          </div>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 24 }}>
+            <button className="claim-btn" onClick={() => guess(true)}>🥩 Meat</button>
+            <button className="claim-btn" onClick={() => guess(false)} style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>🌿 Vegan</button>
+          </div>
+        </>
+      )}
+
+      {result && (
+        <div>
+          <div className="aj-card" style={{ margin: '0 auto', width: 100, minHeight: 100, justifyContent: 'center' }}>
+            <span style={{ fontSize: 40 }}>{card.emoji}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{card.name}</span>
+            <span style={{ fontSize: 12, color: card.eatsMeat ? '#EF4444' : '#10B981' }}>
+              {card.eatsMeat ? '🥩 Eats meat' : '🌿 Herbivore'}
+            </span>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            {result === 'dragon' && <p style={{ fontSize: 20, fontWeight: 800, color: '#F59E0B' }}>🐉 DRAGON! +{bet * 10}🪙</p>}
+            {result === 'win' && <p style={{ fontSize: 18, fontWeight: 700, color: '#10B981' }}>🎉 Correct! +{Math.floor(bet * 1.9)}🪙</p>}
+            {result === 'lose' && <p style={{ fontSize: 18, fontWeight: 700, color: '#EF4444' }}>💀 Wrong! Lost {bet}🪙</p>}
+          </div>
+          <button className="claim-btn" style={{ marginTop: 16 }} onClick={() => setPhase('menu')}>
+            Play Again
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- Play Page ---
 
 export default function Play() {
@@ -717,6 +845,7 @@ export default function Play() {
         {tab === 'mines' && <MinesGame coins={coins} onEntry={minesEntry} onReward={minesReward} />}
         {tab === 'slots' && <SlotGame coins={coins} slotCost={slotCost} onSpin={slotSpin} />}
         {tab === 'agejack' && <AgeJackGame coins={coins} onEntry={ageJackEntry} onReward={ageJackReward} />}
+        {tab === 'vegan' && <VeganOrNotGame coins={coins} onEntry={ageJackEntry} onReward={ageJackReward} />}
       </div>
     </div>
   );
