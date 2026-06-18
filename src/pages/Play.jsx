@@ -510,17 +510,17 @@ function AgeJackGame({ coins, onEntry, onReward }) {
       setPlayerDone(true);
     } else if (total === 100) {
       setPlayerDone(true);
-      dealerPlay(d, dealerHand);
+      dealerPlay(hand, d, dealerHand);
     }
   };
 
   const stand = () => {
     if (playerDone || phase !== 'playing') return;
     setPlayerDone(true);
-    dealerPlay(deck, dealerHand);
+    dealerPlay(playerHand, deck, dealerHand);
   };
 
-  const dealerPlay = (remainingDeck, currentDealerHand) => {
+  const dealerPlay = (currentPlayerHand, remainingDeck, currentDealerHand) => {
     setDealerHidden(false);
     let d = [...remainingDeck];
     let hand = [...currentDealerHand];
@@ -534,7 +534,7 @@ function AgeJackGame({ coins, onEntry, onReward }) {
         setTimeout(draw, 600);
       } else {
         const dTotal = hand.reduce((s, c) => s + c.lifespan, 0);
-        const pTotal = playerHand.reduce((s, c) => s + c.lifespan, 0);
+        const pTotal = currentPlayerHand.reduce((s, c) => s + c.lifespan, 0);
         resolve(pTotal, dTotal);
       }
     };

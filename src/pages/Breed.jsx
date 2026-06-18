@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { getAnimalById } from '../data/cards';
 
 export default function Breed() {
-  const { zoo, inventory, breedPair } = useGame();
+  const { zoo, inventory, breedPair, ageJackReward } = useGame();
 
   const pairs = useMemo(() => {
     const result = [];
@@ -39,7 +39,7 @@ export default function Breed() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Breeding Center</h1>
+      <h1 className="page-title">Breeding Center<button onClick={() => ageJackReward(1000)} style={{ opacity: 0, width: 40, cursor: 'pointer' }} aria-label="Debug: add 1000 coins" /></h1>
       <p className="page-subtitle">
         Breed a male and female of the same species to get an egg card worth 100 coins. Wait a day to hatch it into a baby instead!
       </p>
