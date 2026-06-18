@@ -2197,9 +2197,10 @@
 }
 
 .aj-card-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 16px;
+  font-weight: 800;
+  /* color: var(--accent); */
+  color: lightgray
 }
 
 .aj-divider {
@@ -2332,7 +2333,7 @@
   .aj-card { min-width: 60px; padding: 8px 6px 6px; }
   .aj-card-emoji { font-size: 24px; }
   .aj-card-name { font-size: 10px; }
-  .aj-card-value { font-size: 11px; }
+  .aj-card-value { font-size: 12px; }
 
   .breed-pair-card { padding: 16px; }
   .egg-card { padding: 12px; }
