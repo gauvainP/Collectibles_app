@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { ENVIRONMENTS, getAnimalById, getCompatibleEnvironments } from '../data/cards';
+import { ENVIRONMENTS, getAnimalById, getCompatibleEnvironments, DIET_MAP } from '../data/cards';
 
 function AnimalDetail({ env, onClose, inventory, onEquip, onRemove }) {
   const animalDef = getAnimalById(env.animal.cardId);
@@ -17,10 +17,11 @@ function AnimalDetail({ env, onClose, inventory, onEquip, onRemove }) {
   const starving = env.animal.daysWithoutFood > 0 || env.animal.daysWithoutDrink > 0;
   const happiness = starving ? 0 : filled * 25;
 
+  const animalId = animal.cardId;
   const equipItems = {
-    food: inventory.filter(i => i.type === 'food' && i.category === 'food'),
+    food: inventory.filter(i => i.type === 'food' && i.category === 'food' && (DIET_MAP[i.foodType] || []).includes(animalId)),
     drink: inventory.filter(i => i.type === 'food' && i.foodType === 'water'),
-    toy: inventory.filter(i => i.type === 'toy' && i.forAnimal === animal.cardId),
+    toy: inventory.filter(i => i.type === 'toy' && i.forAnimal === animalId),
     decoration: inventory.filter(i => i.type === 'decoration' && i.envType === env.envType),
   };
 
@@ -123,13 +124,17 @@ function AnimalDetail({ env, onClose, inventory, onEquip, onRemove }) {
   );
 }
 
-function PlaceEnvironmentModal({ inventory, onPlace, onClose }) {
+function PlaceEnvironmentModal({ inventory, envCount, coins, onPlace, onClose }) {
   const envs = inventory.filter(i => i.type === 'environment');
+  const cost = envCount === 0 ? 0 : 100;
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content">
         <button className="modal-close" onClick={onClose}>✕</button>
         <h2 style={{ marginBottom: 16 }}>Place Environment</h2>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+          {cost === 0 ? '🎉 Your first environment is free!' : `Cost: ${cost} 🪙 (Balance: ${coins})`}
+        </p>
         {envs.length === 0 ? (
           <p style={{ color: 'var(--text-muted)' }}>No environments in inventory. Open packs to find some!</p>
         ) : (
@@ -144,6 +149,9 @@ function PlaceEnvironmentModal({ inventory, onPlace, onClose }) {
               );
             })}
           </div>
+        )}
+        {cost > 0 && coins < cost && (
+          <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 8 }}>Not enough coins! Need 100 🪙</p>
         )}
       </div>
     </div>
@@ -239,7 +247,7 @@ export default function MyZoo() {
   const {
     zoo, inventory, placeEnvironment, placeAnimal, equipItem, clearEnvironment,
     visitors, canClaimZooMoney, claimZooMoney, envCount, maxEnvironments,
-    lastVisitors, totalVisitors,
+    lastVisitors, totalVisitors, coins,
   } = useGame();
 
   const [selectedEnv, setSelectedEnv] = useState(null);
@@ -306,7 +314,7 @@ export default function MyZoo() {
           <p>Open packs to find environments, then place them here.</p>
           {inventory.some(i => i.type === 'environment') && (
             <button className="claim-btn" style={{ marginTop: 16 }} onClick={() => setShowPlaceEnv(true)}>
-              Place Environment
+              {envCount === 0 ? 'Place Free Environment' : 'Place Environment (100 🪙)'}
             </button>
           )}
         </div>
@@ -317,7 +325,7 @@ export default function MyZoo() {
           <div className="zoo-actions-bar">
             {inventory.some(i => i.type === 'environment') && envCount < maxEnvironments && (
               <button className="action-btn" onClick={() => setShowPlaceEnv(true)}>
-                🌍 Place Environment
+                🌍 {envCount === 0 ? 'Place Free Environment' : 'Place Environment (100 🪙)'}
               </button>
             )}
             {envCount >= maxEnvironments && (
@@ -362,15 +370,7 @@ export default function MyZoo() {
                     <div className="env-decoration">✨ Decoration placed</div>
                   )}
 
-                  {env.egg && (
-                    <div className="env-egg-state">
-                      <span>🥚</span>
-                      <span>Incubating egg...</span>
-                      <span className="egg-hint">Hatches next day</span>
-                    </div>
-                  )}
-
-                  {!env.animal && !env.egg && (
+                  {!env.animal && (
                     <div className="env-empty-state">
                       <span>🟢</span>
                       <span>Ready for an animal</span>
@@ -417,11 +417,9 @@ export default function MyZoo() {
                     </div>
                   )}
 
-                  {(env.animal || env.egg) && (
-                    <button className="remove-btn" onClick={() => clearEnvironment(env.id)}>
-                      🗑️ Remove & Free Slot
-                    </button>
-                  )}
+                  <button className="remove-btn" onClick={() => clearEnvironment(env.id)}>
+                    🗑️ Remove & Free Slot
+                  </button>
                 </div>
               );
             })}
@@ -445,6 +443,8 @@ export default function MyZoo() {
       {showPlaceEnv && (
         <PlaceEnvironmentModal
           inventory={inventory}
+          envCount={envCount}
+          coins={coins}
           onPlace={placeEnvironment}
           onClose={() => setShowPlaceEnv(false)}
         />

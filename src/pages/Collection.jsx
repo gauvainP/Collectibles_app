@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import {
-  ANIMALS, RARITIES, ENVIRONMENTS, FOOD_TYPES, TOY_NAMES,
+  ANIMALS, RARITIES, ENVIRONMENTS, FOOD_TYPES, TOY_NAMES, DIET_MAP,
   getAnimalById, getCompatibleEnvironments,
 } from '../data/cards';
 import PackOpener from '../components/PackOpener';
 
 const TABS = [
   { id: 'animals', label: 'Animals', emoji: '🐾' },
+  { id: 'eggs', label: 'Eggs', emoji: '🥚' },
   { id: 'food', label: 'Food', emoji: '🍎' },
   { id: 'toys', label: 'Toys', emoji: '🎾' },
   { id: 'environments', label: 'Environments', emoji: '🌍' },
+  { id: 'decorations', label: 'Decorations', emoji: '✨' },
 ];
 
 export default function Collection() {
-  const { collection, inventory, hasPack, sellItem, zoo } = useGame();
+  const { collection, inventory, sellItem, zoo } = useGame();
   const [tab, setTab] = useState('animals');
 
   return (
@@ -38,6 +40,8 @@ export default function Collection() {
                   if (t.id === 'food') return i.type === 'food';
                   if (t.id === 'toys') return i.type === 'toy';
                   if (t.id === 'environments') return i.type === 'environment';
+                  if (t.id === 'decorations') return i.type === 'decoration';
+                  if (t.id === 'eggs') return i.type === 'egg';
                   return false;
                 }).length
               }</span>
@@ -47,9 +51,11 @@ export default function Collection() {
       </div>
 
       {tab === 'animals' && <AnimalsTab collection={collection} inventory={inventory} sellItem={sellItem} zoo={zoo} />}
+      {tab === 'eggs' && <EggsTab inventory={inventory} sellItem={sellItem} />}
       {tab === 'food' && <FoodTab inventory={inventory} sellItem={sellItem} />}
       {tab === 'toys' && <ToysTab inventory={inventory} sellItem={sellItem} />}
       {tab === 'environments' && <EnvironmentsTab inventory={inventory} sellItem={sellItem} />}
+      {tab === 'decorations' && <DecorationsTab inventory={inventory} sellItem={sellItem} />}
     </div>
   );
 }
@@ -142,22 +148,11 @@ function AnimalInfoModal({ animal, owned, everOwned, animals, onClose }) {
   const compatEnvs = getCompatibleEnvironments(animal.id);
   const toy = TOY_NAMES[animal.id];
 
-  const diet = [];
-  if (['lion', 'tiger', 'fox', 'wolf', 'eagle', 'shark', 'dolphin', 'dragon'].includes(animal.id)) {
-    diet.push({ emoji: '🥩', name: 'Meat' });
-  }
-  if (['elephant', 'giraffe', 'monkey', 'panda', 'butterfly', 'turtle', 'rabbit', 'bear', 'horse', 'sheep', 'parrot'].includes(animal.id)) {
-    diet.push({ emoji: '🌿', name: 'Grass/Plants' });
-  }
-  if (['monkey', 'bear', 'parrot', 'butterfly'].includes(animal.id)) {
-    diet.push({ emoji: '🍎', name: 'Fruits' });
-  }
-  if (['cat', 'dog', 'rabbit', 'horse', 'sheep'].includes(animal.id)) {
-    diet.push({ emoji: '🍪', name: 'Treat' });
-  }
-  if (['owl', 'phoenix', 'dragon', 'penguin'].includes(animal.id)) {
-    diet.push({ emoji: '🥩', name: 'Meat' });
-  }
+  const foodEmojis = { meat: '🥩', grass: '🌿', fruits: '🍎', treat: '🍪' };
+  const foodNames = { meat: 'Meat', grass: 'Grass/Plants', fruits: 'Fruits', treat: 'Treat' };
+  const diet = Object.entries(DIET_MAP)
+    .filter(([, animals]) => animals.includes(animal.id))
+    .map(([foodType]) => ({ emoji: foodEmojis[foodType] || '🍽️', name: foodNames[foodType] || foodType }));
   if (!diet.length) diet.push({ emoji: '🍽️', name: 'Omnivore' });
 
   return (
@@ -362,6 +357,69 @@ function EmptyTab({ message }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
       <p>{message}</p>
+    </div>
+  );
+}
+
+function EggsTab({ inventory, sellItem }) {
+  const eggs = inventory.filter(i => i.type === 'egg');
+
+  if (eggs.length === 0) {
+    return <EmptyTab message="No eggs in your inventory. Breed animals in the Breeding Center to get egg cards!" />;
+  }
+
+  const grouped = {};
+  eggs.forEach(e => {
+    if (!grouped[e.cardId]) grouped[e.cardId] = [];
+    grouped[e.cardId].push(e);
+  });
+
+  return (
+    <div className="inventory-tab-grid">
+      {Object.entries(grouped).map(([cardId, items]) => {
+        const def = getAnimalById(cardId);
+        return (
+          <div key={cardId} className="inv-display-card">
+            <button
+              className="sell-btn"
+              onClick={() => sellItem('egg', { cardId })}
+            >
+              $
+            </button>
+            <div className="inv-display-emoji">🥚</div>
+            <div className="inv-display-name">{def?.emoji} {def?.name || cardId} Egg</div>
+            <div className="inv-display-count">x{items.length}</div>
+            <div className="inv-display-type">Sells for 100 🪙</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DecorationsTab({ inventory, sellItem }) {
+  const decors = inventory.filter(i => i.type === 'decoration');
+  if (decors.length === 0) {
+    return <EmptyTab message="No decorations in your inventory. Open packs to find some!" />;
+  }
+  const grouped = {};
+  decors.forEach(d => {
+    if (!grouped[d.envType]) grouped[d.envType] = [];
+    grouped[d.envType].push(d);
+  });
+  return (
+    <div className="inventory-tab-grid">
+      {Object.entries(grouped).map(([envType, items]) => {
+        const envDef = ENVIRONMENTS.find(e => e.id === envType);
+        return items.map(item => (
+          <div key={item.uid} className="inv-display-card">
+            <button className="sell-btn" onClick={() => sellItem('decoration', { envType })}>$</button>
+            <div className="inv-display-emoji">{item.emoji}</div>
+            <div className="inv-display-name">{item.name}</div>
+            <div className="inv-display-type">{envDef?.emoji || '❓'} {envDef?.name || envType}</div>
+          </div>
+        ));
+      })}
     </div>
   );
 }

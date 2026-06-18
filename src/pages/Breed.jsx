@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { getAnimalById } from '../data/cards';
 
 export default function Breed() {
-  const { zoo, breedPair } = useGame();
+  const { zoo, inventory, breedPair } = useGame();
 
   const pairs = useMemo(() => {
     const result = [];
@@ -35,17 +35,16 @@ export default function Breed() {
     return result;
   }, [zoo.environments]);
 
-  const eggs = zoo.eggs || [];
-  const envEggs = zoo.environments.filter(e => e.egg);
+  const eggs = inventory.filter(i => i.type === 'egg');
 
   return (
     <div className="page">
       <h1 className="page-title">Breeding Center</h1>
       <p className="page-subtitle">
-        Breed a male and female of the same species to create a new life.
+        Breed a male and female of the same species to get an egg card worth 100 coins. Wait a day to hatch it into a baby instead!
       </p>
 
-      {pairs.length === 0 && eggs.length === 0 && envEggs.length === 0 && (
+      {pairs.length === 0 && eggs.length === 0 && (
         <div className="zoo-empty-state">
           <div style={{ fontSize: 64, marginBottom: 16 }}>🧬</div>
           <h2>No Breeding Pairs Available</h2>
@@ -56,31 +55,20 @@ export default function Breed() {
         </div>
       )}
 
-      {(envEggs.length > 0 || eggs.length > 0) && (
+      {eggs.length > 0 && (
         <div className="breed-section">
-          <h2 className="breed-section-title">🥚 Incubating Eggs</h2>
+          <h2 className="breed-section-title">🥚 Eggs in Inventory</h2>
           <div className="breed-eggs-grid">
-            {envEggs.map(env => {
-              const def = getAnimalById(env.egg.cardId);
-              return (
-                <div key={env.id} className="egg-card">
-                  <div className="egg-emoji">🥚</div>
-                  <div className="egg-info">
-                    <span className="egg-species">{def?.emoji} {def?.name || env.egg.cardId}</span>
-                    <span className="egg-timer">Hatches next daily reset</span>
-                  </div>
-                </div>
-              );
-            })}
             {eggs.map(egg => {
               const def = getAnimalById(egg.cardId);
               return (
-                <div key={egg.id} className="egg-card">
+                <div key={egg.uid} className="egg-card">
                   <div className="egg-emoji">🥚</div>
                   <div className="egg-info">
                     <span className="egg-species">{def?.emoji} {def?.name || egg.cardId}</span>
-                    <span className="egg-timer">Hatches next daily reset</span>
+                    <span className="egg-timer">Hatches on next daily reset</span>
                   </div>
+                  <div className="egg-value">Sell for 100 🪙</div>
                 </div>
               );
             })}
@@ -123,13 +111,13 @@ export default function Breed() {
                     </div>
                   </div>
                   <div className="pair-warning">
-                    ⚠️ Both parents will die after breeding
+                    ⚠️ Both parents die. Egg card goes to inventory.
                   </div>
                   <button
                     className="claim-btn breed-btn"
                     onClick={() => breedPair(pair.male.id, pair.female.id)}
                   >
-                    🧬 Breed & Create Egg
+                    🧬 Breed & Get Egg Card
                   </button>
                 </div>
               );

@@ -40,6 +40,7 @@ const ENVIRONMENTS = [
   { id: 'forest', name: 'Forest', emoji: '🌲', description: 'Temperate woodland' },
   { id: 'jungle', name: 'Jungle', emoji: '🌴', description: 'Dense tropical rainforest' },
   { id: 'farm', name: 'Farm', emoji: '🌽', description: 'Rural agricultural land' },
+  { id: 'aquatic', name: 'Aquarium', emoji: '🌊', description: 'Underwater aquatic habitat' },
 ];
 
 const FOOD_TYPES = [
@@ -52,29 +53,34 @@ const FOOD_TYPES = [
 
 const ENV_DECORATIONS = {
   savanna: [
-    { id: 'safari_car', name: 'Safari Car', emoji: '🚙' },
-    { id: 'watering_hole', name: 'Watering Hole', emoji: '💦' },
-    { id: 'acacia_tree', name: 'Acacia Tree', emoji: '🌳' },
+    { id: 'safari_car', name: 'Safari Car', emoji: '🚙', rarity: 'common' },
+    { id: 'watering_hole', name: 'Watering Hole', emoji: '💦', rarity: 'uncommon' },
+    { id: 'acacia_tree', name: 'Acacia Tree', emoji: '🌳', rarity: 'common' },
   ],
   house: [
-    { id: 'dog_bed', name: 'Dog Bed', emoji: '🛏️' },
-    { id: 'cat_tree', name: 'Cat Tree', emoji: '🌴' },
-    { id: 'fish_tank', name: 'Fish Tank', emoji: '🪸' },
+    { id: 'dog_bed', name: 'Dog Bed', emoji: '🛏️', rarity: 'common' },
+    { id: 'cat_tree', name: 'Cat Tree', emoji: '🌴', rarity: 'uncommon' },
+    { id: 'fish_tank', name: 'Fish Tank', emoji: '🪸', rarity: 'rare' },
   ],
   forest: [
-    { id: 'mushroom_house', name: 'Mushroom House', emoji: '🍄' },
-    { id: 'tree_stump', name: 'Tree Stump', emoji: '🪵' },
-    { id: 'river_rock', name: 'River Rock', emoji: '🪨' },
+    { id: 'mushroom_house', name: 'Mushroom House', emoji: '🍄', rarity: 'uncommon' },
+    { id: 'tree_stump', name: 'Tree Stump', emoji: '🪵', rarity: 'common' },
+    { id: 'river_rock', name: 'River Rock', emoji: '🪨', rarity: 'common' },
   ],
   jungle: [
-    { id: 'vine_swing', name: 'Vine Swing', emoji: '🪢' },
-    { id: 'waterfall', name: 'Waterfall', emoji: '🌊' },
-    { id: 'ancient_ruins', name: 'Ancient Ruins', emoji: '🏛️' },
+    { id: 'vine_swing', name: 'Vine Swing', emoji: '🪢', rarity: 'common' },
+    { id: 'waterfall', name: 'Waterfall', emoji: '🌊', rarity: 'epic' },
+    { id: 'ancient_ruins', name: 'Ancient Ruins', emoji: '🏛️', rarity: 'rare' },
   ],
   farm: [
-    { id: 'hay_bale', name: 'Hay Bale', emoji: '🌾' },
-    { id: 'tractor_tire', name: 'Tractor Tire', emoji: '⚙️' },
-    { id: 'windmill', name: 'Windmill', emoji: '🌬️' },
+    { id: 'hay_bale', name: 'Hay Bale', emoji: '🌾', rarity: 'common' },
+    { id: 'tractor_tire', name: 'Tractor Tire', emoji: '⚙️', rarity: 'uncommon' },
+    { id: 'windmill', name: 'Windmill', emoji: '🌬️', rarity: 'rare' },
+  ],
+  aquatic: [
+    { id: 'coral_reef', name: 'Coral Reef', emoji: '🪸', rarity: 'uncommon' },
+    { id: 'sunken_ship', name: 'Sunken Ship', emoji: '⛵', rarity: 'rare' },
+    { id: 'treasure_chest', name: 'Treasure Chest', emoji: '🧳', rarity: 'epic' },
   ],
 };
 
@@ -106,12 +112,20 @@ const TOY_NAMES = {
   parrot: { name: 'Swing Perch', emoji: '🪢' },
 };
 
+const DIET_MAP = {
+  meat: ['lion', 'tiger', 'fox', 'wolf', 'eagle', 'shark', 'dolphin', 'dragon', 'owl', 'phoenix', 'penguin'],
+  grass: ['elephant', 'giraffe', 'monkey', 'panda', 'butterfly', 'turtle', 'rabbit', 'bear', 'horse', 'sheep', 'parrot'],
+  fruits: ['monkey', 'bear', 'parrot', 'butterfly'],
+  treat: ['cat', 'dog', 'rabbit', 'horse', 'sheep'],
+};
+
 const COMPATIBILITY = {
   savanna: ['lion', 'tiger', 'elephant', 'giraffe', 'fox', 'wolf'],
   house: ['dog', 'cat', 'rabbit', 'parrot'],
   forest: ['fox', 'wolf', 'owl', 'bear', 'butterfly', 'rabbit', 'panda', 'eagle', 'phoenix', 'parrot'],
   jungle: ['tiger', 'monkey', 'panda', 'butterfly', 'dragon', 'phoenix', 'parrot'],
   farm: ['horse', 'sheep', 'rabbit', 'bear', 'peacock', 'turtle', 'penguin'],
+  aquatic: ['shark', 'dolphin', 'turtle', 'penguin'],
 };
 
 const ITEM_WEIGHTS = {
@@ -129,6 +143,33 @@ function uid() { return `item_${_uid++}`; }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+function pickWeightedAnimal() {
+  const totalRarityWeight = RARITY_ORDER.reduce((s, r) => s + RARITIES[r].weight, 0);
+  let roll = Math.random() * totalRarityWeight;
+  let chosenRarity = 'common';
+  for (const r of RARITY_ORDER) {
+    roll -= RARITIES[r].weight;
+    if (roll <= 0) { chosenRarity = r; break; }
+  }
+  const pool = ANIMALS.filter(a => a.rarity === chosenRarity);
+  return pick(pool);
+}
+
+function pickWeightedDecoration(envId) {
+  const pool = ENV_DECORATIONS[envId] || [];
+  const totalRarityWeight = RARITY_ORDER.reduce((s, r) => s + RARITIES[r].weight, 0);
+  let roll = Math.random() * totalRarityWeight;
+  let chosenRarity = 'common';
+  for (const r of RARITY_ORDER) {
+    roll -= RARITIES[r].weight;
+    if (roll <= 0) { chosenRarity = r; break; }
+  }
+  const filtered = pool.filter(d => d.rarity === chosenRarity);
+  if (filtered.length === 0) return pick(pool);
+  return pick(filtered);
+}
+
 function generatePack() {
   const pack = [];
   const types = Object.keys(ITEM_WEIGHTS);
@@ -145,7 +186,7 @@ function generatePack() {
     let item;
     switch (chosenType) {
       case 'animal': {
-        const animal = pick(ANIMALS);
+        const animal = pickWeightedAnimal();
         item = { slot, type: 'animal', cardId: animal.id, name: animal.name, emoji: animal.emoji, rarity: animal.rarity };
         break;
       }
@@ -163,15 +204,15 @@ function generatePack() {
         item = { slot, type: 'coins', amount: 20, name: '20 Coins', emoji: '🪙' };
         break;
       case 'toy': {
-        const animalId = pick(ANIMALS).id;
+        const animalId = pickWeightedAnimal().id;
         const toy = TOY_NAMES[animalId];
         item = { slot, type: 'toy', forAnimal: animalId, name: `${toy.name}`, emoji: toy.emoji };
         break;
       }
       case 'decoration': {
         const env = pick(ENVIRONMENTS);
-        const dec = pick(ENV_DECORATIONS[env.id]);
-        item = { slot, type: 'decoration', envType: env.id, name: dec.name, emoji: dec.emoji };
+        const dec = pickWeightedDecoration(env.id);
+        item = { slot, type: 'decoration', envType: env.id, name: dec.name, emoji: dec.emoji, rarity: dec.rarity };
         break;
       }
       default:
@@ -198,7 +239,7 @@ function generateGigaPack() {
     let item;
     switch (chosenType) {
       case 'animal': {
-        const animal = pick(ANIMALS);
+        const animal = pickWeightedAnimal();
         item = { slot, type: 'animal', cardId: animal.id, name: animal.name, emoji: animal.emoji, rarity: animal.rarity };
         break;
       }
@@ -216,15 +257,15 @@ function generateGigaPack() {
         item = { slot, type: 'coins', amount: 20, name: '20 Coins', emoji: '🪙' };
         break;
       case 'toy': {
-        const animalId = pick(ANIMALS).id;
+        const animalId = pickWeightedAnimal().id;
         const toy = TOY_NAMES[animalId];
         item = { slot, type: 'toy', forAnimal: animalId, name: `${toy.name}`, emoji: toy.emoji };
         break;
       }
       case 'decoration': {
         const env = pick(ENVIRONMENTS);
-        const dec = pick(ENV_DECORATIONS[env.id]);
-        item = { slot, type: 'decoration', envType: env.id, name: dec.name, emoji: dec.emoji };
+        const dec = pickWeightedDecoration(env.id);
+        item = { slot, type: 'decoration', envType: env.id, name: dec.name, emoji: dec.emoji, rarity: dec.rarity };
         break;
       }
       default:
@@ -251,16 +292,21 @@ function generateFoodPack() {
 function generateToyPack() {
   const pack = [];
   for (let slot = 0; slot < 2; slot++) {
-    const animalId = pick(ANIMALS).id;
-    const toy = TOY_NAMES[animalId];
-    pack.push({ slot, type: 'toy', forAnimal: animalId, name: toy.name, emoji: toy.emoji, uid: uid() });
+    const animal = pickWeightedAnimal();
+    const toy = TOY_NAMES[animal.id];
+    pack.push({ slot, type: 'toy', forAnimal: animal.id, name: toy.name, emoji: toy.emoji, uid: uid() });
   }
   return pack.sort(() => Math.random() - 0.5);
 }
 
 function generateAnimalPack() {
-  const animal = pick(ANIMALS);
+  const animal = pickWeightedAnimal();
   return [{ slot: 0, type: 'animal', cardId: animal.id, name: animal.name, emoji: animal.emoji, rarity: animal.rarity, uid: uid() }];
+}
+
+function generateEnvironmentPack() {
+  const env = pick(ENVIRONMENTS);
+  return [{ slot: 0, type: 'environment', envType: env.id, name: env.name, emoji: env.emoji, uid: uid() }];
 }
 
 function randomSex() {
@@ -277,6 +323,6 @@ function getAnimalById(id) { return ANIMALS.find(a => a.id === id); }
 
 export {
   RARITIES, ANIMALS, ENVIRONMENTS, FOOD_TYPES, ENV_DECORATIONS, TOY_NAMES,
-  COMPATIBILITY, ITEM_WEIGHTS, generatePack, generateGigaPack, generateFoodPack, generateToyPack, generateAnimalPack,
+  COMPATIBILITY, DIET_MAP, ITEM_WEIGHTS, generatePack, generateGigaPack, generateFoodPack, generateToyPack, generateAnimalPack, generateEnvironmentPack,
   getCompatibleEnvironments, getAnimalById, uid, randomSex,
 };
